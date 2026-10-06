@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Ghost in My Machine — the record</title>
+<style>
+  :root{
+    --bg:#0c0d10; --panel:#111318; --ink:#e4e0d8; --dim:#9a968d; --faint:#63615c;
+    --rule:#20222a; --link:#9db8d0; --warm:#d7a45f; --green:#7cc38a; --mauve:#b58cc4;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,system-ui,sans-serif;
+    --serif:Georgia,"Times New Roman",serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:#07080b;color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.5}
+  a{color:var(--link)}
+  .wrap{max-width:900px;margin:0 auto;padding:42px 22px 80px}
+  h1{font-family:var(--serif);font-weight:400;font-size:28px;letter-spacing:.3px;margin:0 0 6px}
+  .sub{color:var(--dim);font-size:14px;max-width:62ch;margin:0 0 4px;line-height:1.6}
+  .asof{color:var(--faint);font-size:12px;margin-top:10px}
+  /* gate */
+  #gate{max-width:420px;margin:14vh auto 0;padding:0 22px;text-align:center}
+  #gate h1{font-size:24px}
+  #gate p{color:var(--dim);font-size:14px;line-height:1.6;margin:0 0 20px}
+  #gate input{width:100%;background:#131419;border:1px solid #262a32;color:var(--ink);font-family:var(--sans);font-size:16px;padding:12px 14px;border-radius:9px;margin-bottom:12px}
+  #gate input:focus{outline:none;border-color:#3a506a}
+  #gate button{width:100%;background:#1a1f26;border:1px solid #2b313a;color:var(--link);font-family:var(--sans);font-size:15px;padding:12px;border-radius:9px;cursor:pointer}
+  #gate button:hover{color:#cfe0ef;border-color:#3a506a}
+  #gate .err{color:#e0796b;font-size:13px;min-height:18px;margin-top:4px}
+  /* layout */
+  .hide{display:none!important}
+  section{margin:38px 0 0}
+  .shead{font-family:var(--serif);font-size:19px;font-weight:400;margin:0 0 4px;color:var(--ink)}
+  .snote{color:var(--faint);font-size:12.5px;margin:0 0 16px;line-height:1.55}
+  /* stat tiles */
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:22px}
+  .tile{background:var(--panel);border:1px solid var(--rule);border-radius:13px;padding:16px 16px 15px}
+  .tile .n{font-family:var(--serif);font-size:30px;line-height:1.1;color:var(--ink)}
+  .tile .k{font-size:12px;color:var(--dim);margin-top:7px;letter-spacing:.02em}
+  .tile .x{font-size:11.5px;color:var(--faint);margin-top:3px}
+  /* bars */
+  .chart{background:var(--panel);border:1px solid var(--rule);border-radius:13px;padding:16px 18px 18px}
+  .bar{display:grid;grid-template-columns:150px 1fr 48px;align-items:center;gap:12px;padding:5px 0}
+  .bar-label{font-size:12.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar-track{height:14px;background:rgba(255,255,255,.045);border-radius:4px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:4px;min-width:3px;transition:width .5s ease}
+  .bar-val{font-size:12.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+  @media (max-width:540px){ .bar{grid-template-columns:108px 1fr 40px;gap:8px} .bar-label{font-size:11.5px} }
+  /* responses */
+  .filters{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 16px}
+  .chip{background:var(--panel);border:1px solid var(--rule);color:var(--dim);font-size:12.5px;padding:6px 12px;border-radius:999px;cursor:pointer}
+  .chip:hover{color:var(--ink);border-color:#3a424e}
+  .chip.on{color:#0c0d10;background:var(--link);border-color:var(--link)}
+  .resp{background:var(--panel);border:1px solid var(--rule);border-radius:13px;padding:15px 17px;margin-bottom:11px}
+  .resp .ctx{font-size:12px;color:var(--faint);letter-spacing:.02em}
+  .resp .txt{font-family:var(--serif);font-size:18px;line-height:1.55;color:var(--ink);margin:7px 0 9px}
+  .resp .meta{font-size:12px;color:var(--dim);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .tag{font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px solid}
+  .tag.ok{color:var(--green);border-color:rgba(124,195,138,.4)}
+  .tag.pend{color:var(--warm);border-color:rgba(215,164,95,.4)}
+  .empty{color:var(--faint);font-size:13px;padding:10px 0}
+  .reloadbtn{background:#1a1f26;border:1px solid #2b313a;color:var(--link);font-size:13px;padding:8px 14px;border-radius:8px;cursor:pointer;margin-top:4px}
+  .reloadbtn:hover{border-color:#3a506a;color:#cfe0ef}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <h1>The record</h1>
+  <p>This is the quiet side of <em>The Ghost in My Machine</em>. It is closed. Enter the passphrase to see what the piece has kept.</p>
+  <input id="passin" type="password" placeholder="Passphrase" autocomplete="off" autofocus>
+  <button id="passbtn">Open the record</button>
+  <div class="err" id="gateerr"></div>
+</div>
+
+<div class="wrap hide" id="dash">
+  <h1>The Ghost in My Machine — the record</h1>
+  <p class="sub">What the machine kept while strangers held the phone, far away and at their own hour. Counts and paths are anonymous. The words are what people chose to type.</p>
+  <div class="asof" id="asof"></div>
+  <button class="reloadbtn" id="reload">Reload</button>
+
+  <div class="tiles" id="tiles"></div>
+
+  <section>
+    <h2 class="shead">How far people got</h2>
+    <p class="snote">Distinct visits that reached each screen, most reached first.</p>
+    <div class="chart" id="funnel"></div>
+  </section>
+
+  <section>
+    <h2 class="shead">Where visits ended</h2>
+    <p class="snote">The last screen each visit reached before leaving. The long bars are where people let go of the phone.</p>
+    <div class="chart" id="endings"></div>
+  </section>
+
+  <section>
+    <h2 class="shead">Where they reached from</h2>
+    <p class="snote">Distinct visits by the city their device reported. The piece is open to everyone, and distance decides who stays.</p>
+    <div class="chart" id="places"></div>
+  </section>
+
+  <section>
+    <h2 class="shead">What kind of words they left</h2>
+    <p class="snote">Across all the places people can type into a dead person's accounts.</p>
+    <div class="chart" id="kinds"></div>
+  </section>
+
+  <section>
+    <h2 class="shead">Visits over time</h2>
+    <p class="snote">Hands that picked the phone up, by day.</p>
+    <div class="chart" id="byday"></div>
+  </section>
+
+  <section>
+    <h2 class="shead">What people left</h2>
+    <p class="snote">The words themselves. Pending ones are not shown to visitors until you approve them in Supabase.</p>
+    <div class="filters" id="filters"></div>
+    <div id="responses"></div>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var CONFIG = {
+    SUPABASE_URL:  "https://fzmgwsxtwkrzequeirvv.supabase.co",
+    SUPABASE_ANON: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6bWd3c3h0d2tyemVxdWVpcnZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyNzg0MTEsImV4cCI6MjEwNjg1NDQxMX0.J79rti1-PkM9rTAexLNvfyllNAPolxlrXWHMk66En8g"
+  };
+  var HUE = { funnel:'var(--link)', endings:'var(--warm)', places:'var(--green)', kinds:'var(--mauve)', byday:'var(--link)' };
+  var PROMPT = {
+    to_stranger:'writing back to the stranger who was still waiting',
+    unfinished:'finishing a sentence the dead had left open',
+    relationship:'naming what they were to the one who died',
+    as_them:'posting in the dead person’s name',
+    legacy:'choosing who should inherit a person'
+  };
+  var pass="", data=null, activeKind="all";
+
+  function esc(s){return (s+"").replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function el(id){return document.getElementById(id);}
+  function sbUrl(p){return CONFIG.SUPABASE_URL.replace(/\/$/,'')+'/rest/v1/'+p;}
+  function headers(){return {'apikey':CONFIG.SUPABASE_ANON,'Authorization':'Bearer '+CONFIG.SUPABASE_ANON,'Content-Type':'application/json'};}
+
+  function relTime(iso){
+    try{ var d=new Date(iso), s=(Date.now()-d.getTime())/1000;
+      if(s<60) return 'just now';
+      if(s<3600) return Math.floor(s/60)+' min ago';
+      if(s<86400) return Math.floor(s/3600)+' h ago';
+      if(s<2592000) return Math.floor(s/86400)+' d ago';
+      return d.toLocaleDateString();
+    }catch(e){ return ''; }
+  }
+
+  function load(){
+    el('gateerr').textContent='Opening…';
+    fetch(sbUrl('rpc/ghost_data'),{method:'POST',headers:headers(),body:JSON.stringify({pass:pass})})
+      .then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
+      .then(function(j){
+        if(!j || j.error){ el('gateerr').textContent='That passphrase did not open it.'; return; }
+        data=j; el('gate').classList.add('hide'); el('dash').classList.remove('hide'); render();
+      })
+      .catch(function(){ el('gateerr').textContent='Could not reach the record. Check that the database function exists.'; });
+  }
+
+  function tiles(){
+    var d=data, sess=d.sessions||0, ended=d.reached_end||0;
+    var pct = sess? Math.round(ended/sess*100) : 0;
+    var t=[
+      {n:(d.pickups||0).toLocaleString(), k:'hands that held it', x:'times the phone was picked up'},
+      {n:(sess).toLocaleString(), k:'visits logged', x:'separate journeys through it'},
+      {n:(d.responses_total||0).toLocaleString(), k:'words left', x:(d.responses_approved||0)+' approved so far'},
+      {n:(ended).toLocaleString(), k:'reached an ending', x:pct+'% of visits got there'}
+    ];
+    el('tiles').innerHTML=t.map(function(o){
+      return '<div class="tile"><div class="n">'+esc(o.n)+'</div><div class="k">'+esc(o.k)+'</div><div class="x">'+esc(o.x)+'</div></div>';
+    }).join('');
+  }
+
+  function bars(containerId, rows, labelKey, valKey, hue, limit){
+    var c=el(containerId);
+    if(!rows || !rows.length){ c.innerHTML='<div class="empty">Nothing yet.</div>'; return; }
+    rows = rows.slice(0, limit||100);
+    var max=1; rows.forEach(function(r){ if((+r[valKey])>max) max=+r[valKey]; });
+    c.innerHTML=rows.map(function(r){
+      var label=esc(r[labelKey]==null?'unknown':r[labelKey]);
+      var v=+r[valKey]||0, w=Math.max(2, Math.round(v/max*100));
+      return '<div class="bar" title="'+label+': '+v+'">'
+        +'<div class="bar-label">'+label+'</div>'
+        +'<div class="bar-track"><div class="bar-fill" style="width:'+w+'%;background:'+hue+'"></div></div>'
+        +'<div class="bar-val">'+v.toLocaleString()+'</div></div>';
+    }).join('');
+  }
+
+  function responses(){
+    var rows=(data.responses||[]).filter(function(r){ return activeKind==='all' || r.kind===activeKind; });
+    var c=el('responses');
+    if(!rows.length){ c.innerHTML='<div class="empty">No words captured yet.</div>'; return; }
+    c.innerHTML=rows.map(function(r){
+      var ctx=PROMPT[r.kind]||r.kind;
+      var where=r.place?esc(r.place):'somewhere';
+      var tag=r.approved?'<span class="tag ok">shown</span>':'<span class="tag pend">pending</span>';
+      return '<div class="resp"><div class="ctx">In '+where+', someone, '+esc(ctx)+', wrote</div>'
+        +'<div class="txt">“'+esc(r.text||'')+'”</div>'
+        +'<div class="meta">'+tag+'<span>'+esc(relTime(r.created_at))+'</span></div></div>';
+    }).join('');
+  }
+
+  function filters(){
+    var kinds=(data.kinds||[]).map(function(k){return k.kind;});
+    var all=['all'].concat(kinds);
+    el('filters').innerHTML=all.map(function(k){
+      var label = k==='all' ? 'all' : (PROMPT[k]? k.replace(/_/g,' ') : k);
+      return '<button class="chip'+(k===activeKind?' on':'')+'" data-k="'+esc(k)+'">'+esc(label)+'</button>';
+    }).join('');
+    Array.prototype.forEach.call(el('filters').querySelectorAll('.chip'),function(b){
+      b.addEventListener('click',function(){ activeKind=b.getAttribute('data-k'); filters(); responses(); });
+    });
+  }
+
+  function render(){
+    el('asof').textContent='As of '+new Date().toLocaleString();
+    tiles();
+    bars('funnel', data.funnel, 'passage', 'visits', HUE.funnel, 22);
+    bars('endings', data.endings, 'last_screen', 'ended_here', HUE.endings, 18);
+    bars('places', data.places, 'place', 'visits', HUE.places, 20);
+    bars('kinds', data.kinds, 'kind', 'n', HUE.kinds, 10);
+    bars('byday', data.pickups_by_day, 'day', 'n', HUE.byday, 60);
+    filters();
+    responses();
+  }
+
+  el('passbtn').addEventListener('click',function(){ pass=el('passin').value.trim(); if(pass) load(); });
+  el('passin').addEventListener('keydown',function(e){ if(e.key==='Enter'){ pass=el('passin').value.trim(); if(pass) load(); }});
+  el('reload').addEventListener('click',function(){ load(); });
+})();
+</script>
+</body>
+</html>
